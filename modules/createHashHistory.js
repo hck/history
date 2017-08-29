@@ -101,6 +101,7 @@ const createHashHistory = (props = {}) => {
 
   let forceNextPop = false
   let ignorePath = null
+  let goTransition = false
 
   const handleHashChange = () => {
     const path = getHashPath()
@@ -149,26 +150,31 @@ const createHashHistory = (props = {}) => {
     // keeping a list of paths we've seen in sessionStorage.
     // Instead, we just default to 0 for paths we don't know.
 
-    let toIndex = allPaths.lastIndexOf(createPath(toLocation))
-
-    if (toIndex === -1)
-      toIndex = 0
-
-    let fromIndex = allPaths.lastIndexOf(createPath(fromLocation))
-
     forceNextPop = true
 
-    if (fromIndex === -1) {
-      // replace manually entered hash with current history location
-      replaceHashPath(createPath(toLocation))
-    } else {
+    if (goTransition) {
+      let toIndex = allPaths.lastIndexOf(createPath(toLocation))
+
+      if (toIndex === -1)
+        toIndex = 0
+
+      let fromIndex = allPaths.lastIndexOf(createPath(fromLocation))
+
+      if (fromIndex === -1)
+        fromIndex = 0
+
       const delta = toIndex - fromIndex
 
       if (delta) {
         forceNextPop = true
         go(delta)
       }
+    } else {
+      // replace manually entered hash with current history location
+      replaceHashPath(createPath(toLocation))
     }
+
+    goTransition = false
   }
 
   // Ensure the hash is encoded properly before doing anything else.
@@ -271,11 +277,15 @@ const createHashHistory = (props = {}) => {
     globalHistory.go(n)
   }
 
-  const goBack = () =>
+  const goBack = () => {
+    goTransition = true
     go(-1)
+  }
 
-  const goForward = () =>
+  const goForward = () => {
+    goTransition = true
     go(1)
+  }
 
   let listenerCount = 0
   let listenerAdded = false

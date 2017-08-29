@@ -105,6 +105,7 @@ var createHashHistory = function createHashHistory() {
 
   var forceNextPop = false;
   var ignorePath = null;
+  var goTransition = false;
 
   var handleHashChange = function handleHashChange() {
     var path = getHashPath();
@@ -151,25 +152,29 @@ var createHashHistory = function createHashHistory() {
     // keeping a list of paths we've seen in sessionStorage.
     // Instead, we just default to 0 for paths we don't know.
 
-    var toIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(toLocation));
-
-    if (toIndex === -1) toIndex = 0;
-
-    var fromIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(fromLocation));
-
     forceNextPop = true;
 
-    if (fromIndex === -1) {
-      // replace manually entered hash with current history location
-      replaceHashPath((0, _PathUtils.createPath)(toLocation));
-    } else {
+    if (goTransition) {
+      var toIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(toLocation));
+
+      if (toIndex === -1) toIndex = 0;
+
+      var fromIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(fromLocation));
+
+      if (fromIndex === -1) fromIndex = 0;
+
       var delta = toIndex - fromIndex;
 
       if (delta) {
         forceNextPop = true;
         go(delta);
       }
+    } else {
+      // replace manually entered hash with current history location
+      replaceHashPath((0, _PathUtils.createPath)(toLocation));
     }
+
+    goTransition = false;
   };
 
   // Ensure the hash is encoded properly before doing anything else.
@@ -258,11 +263,13 @@ var createHashHistory = function createHashHistory() {
   };
 
   var goBack = function goBack() {
-    return go(-1);
+    goTransition = true;
+    go(-1);
   };
 
   var goForward = function goForward() {
-    return go(1);
+    goTransition = true;
+    go(1);
   };
 
   var listenerCount = 0;
